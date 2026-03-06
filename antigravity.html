@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Antigravity Agent Workflow: Skillsets & MCP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                    },
+                    colors: {
+                        'ag-bg': '#FDFBF7',
+                        'ag-surface': '#F4EBE1',
+                        'ag-primary': '#2D3748',
+                        'ag-accent': '#0D9488',
+                        'ag-text': '#1A202C',
+                        'ag-muted': '#718096'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #FDFBF7;
+            color: #1A202C;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+        
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        @media (max-width: 768px) {
+            .chart-container {
+                height: 250px;
+                max-height: 300px;
+            }
+        }
+
+        .nav-item.active {
+            background-color: #F4EBE1;
+            color: #0D9488;
+            border-left: 4px solid #0D9488;
+            font-weight: 600;
+        }
+
+        .view-section {
+            display: none;
+            animation: fadeIn 0.4s ease-in-out;
+        }
+
+        .view-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .skill-card {
+            transition: all 0.2s;
+        }
+        
+        .skill-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            border-color: #0D9488;
+        }
+    </style>
+</head>
+<body class="flex h-screen font-sans antialiased selection:bg-ag-accent selection:text-white">
+
+    <!-- Chosen Palette: Warm Neutrals (Alabaster #FDFBF7, Sand #F4EBE1) with Slate (#2D3748) and soft Teal (#0D9488) accents. -->
+    <!-- Application Structure Plan: A dashboard-style SPA with sidebar navigation. The structure is broken down into three logical phases based on the user's inquiry: 1) System Overview (The Antigravity concept), 2) Skillset & Agent Allocation (The "Fireman" project assignment logic), and 3) MCP & Tooling (The technical extensions). This allows users to move from high-level orchestration concepts down to specific package implementations intuitively. -->
+    <!-- Visualization & Content Choices: 1. Doughnut Chart (Chart.js): Shows the optimal distribution of agent roles in a typical Antigravity workflow. 2. Horizontal Bar Chart (Chart.js): Compares the utility vs. complexity of predefined skillsets. 3. Interactive Matrix (HTML/JS): Allows users to click on specific skill categories to reveal the best tools/MCP servers to assign to those agents. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <nav class="w-64 bg-white border-r border-gray-200 flex flex-col hidden md:flex h-full fixed z-10 shadow-sm">
+        <div class="p-6 border-b border-gray-100">
+            <h1 class="text-2xl font-bold text-ag-primary tracking-tight">Antigravity<span class="text-ag-accent">.</span></h1>
+            <p class="text-xs text-ag-muted mt-1 uppercase tracking-wider font-semibold">Agent Workflow OS</p>
+        </div>
+        <div class="flex-1 overflow-y-auto py-4">
+            <ul class="space-y-1">
+                <li>
+                    <button data-target="overview" class="nav-item active w-full text-left px-6 py-3 text-ag-text hover:bg-ag-surface transition-colors">
+                        &#128200; System Overview
+                    </button>
+                </li>
+                <li>
+                    <button data-target="skillsets" class="nav-item w-full text-left px-6 py-3 text-ag-text hover:bg-ag-surface transition-colors">
+                        &#129464; Skillsets & Agents
+                    </button>
+                </li>
+                <li>
+                    <button data-target="mcp-tools" class="nav-item w-full text-left px-6 py-3 text-ag-text hover:bg-ag-surface transition-colors">
+                        &#128736; MCP & Extensions
+                    </button>
+                </li>
+            </ul>
+        </div>
+        <div class="p-4 border-t border-gray-100 bg-gray-50">
+            <p class="text-xs text-center text-ag-muted">Version 2.0.4 | Research Build</p>
+        </div>
+    </nav>
+
+    <div class="md:hidden fixed top-0 w-full bg-white border-b z-20 flex justify-between items-center p-4 shadow-sm">
+        <h1 class="text-xl font-bold text-ag-primary">Antigravity<span class="text-ag-accent">.</span></h1>
+        <select id="mobile-nav" class="bg-ag-surface border-none text-sm font-medium p-2 rounded outline-none">
+            <option value="overview">Overview</option>
+            <option value="skillsets">Skillsets & Agents</option>
+            <option value="mcp-tools">MCP Tools</option>
+        </select>
+    </div>
+
+    <main class="flex-1 ml-0 md:ml-64 p-6 md:p-10 pt-20 md:pt-10 h-full overflow-y-auto">
+        <div class="max-w-6xl mx-auto">
+
+            <section id="overview" class="view-section active">
+                <header class="mb-8">
+                    <h2 class="text-3xl font-bold text-ag-primary mb-3">The Antigravity Workflow</h2>
+                    <p class="text-lg text-ag-muted leading-relaxed">
+                        Welcome to the foundational analysis of the "Antigravity" methodology. This section introduces how modern orchestration frameworks remove the friction from multi-agent systems. By decoupling skills from core LLMs and utilizing the Model Context Protocol (MCP), we achieve a weightless, highly adaptable workflow where agents are spun up, assigned precise toolsets, and executed seamlessly.
+                    </p>
+                </header>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 border-t-4 border-t-ag-accent">
+                        <div class="text-3xl mb-2">&#9889;</div>
+                        <h3 class="font-bold text-lg mb-1">Frictionless Orchestration</h3>
+                        <p class="text-sm text-ag-muted">Zero manual API wiring. Agents discover and utilize tools dynamically through standardized protocols.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 border-t-4 border-t-ag-accent">
+                        <div class="text-3xl mb-2">&#129302;</div>
+                        <h3 class="font-bold text-lg mb-1">Predefined Skill Injection</h3>
+                        <p class="text-sm text-ag-muted">Assign modular, reusable capabilities (e.g., File I/O, Web Search) to specific agents instantly.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 border-t-4 border-t-ag-accent">
+                        <div class="text-3xl mb-2">&#127760;</div>
+                        <h3 class="font-bold text-lg mb-1">MCP Integration</h3>
+                        <p class="text-sm text-ag-muted">Model Context Protocol acts as the universal bridge between your agents and local/remote data sources.</p>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-8">
+                    <h3 class="font-bold text-xl mb-4 text-center">Optimal Agent Role Distribution in a Project</h3>
+                    <p class="text-sm text-center text-ag-muted mb-6">A typical Antigravity workflow separates concerns. Below is the recommended percentage allocation of compute and skillset focus across specialized agents.</p>
+                    <div class="chart-container">
+                        <canvas id="roleChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <section id="skillsets" class="view-section">
+                <header class="mb-8">
+                    <h2 class="text-3xl font-bold text-ag-primary mb-3">Skillsets & Agent Assignment</h2>
+                    <p class="text-lg text-ag-muted leading-relaxed">
+                        This section breaks down how to manage and assign predefined skillsets to different agents. Think of this like assembling a specialized crew. You don't give a "Fireman" a stethoscope; you give them a hose. Similarly, in an Antigravity workflow, you assign the <code>mcp-postgres</code> tool strictly to the Database Analyst agent, and <code>playwright-scraper</code> to the Researcher. Explore the matrix below to see how predefined skills map to roles.
+                    </p>
+                </header>
+
+                <div class="flex flex-col lg:flex-row gap-8 mb-8">
+                    <div class="w-full lg:w-1/3">
+                        <h3 class="font-bold text-lg mb-4">Select an Agent Role:</h3>
+                        <div class="space-y-3" id="agent-selector">
+                            <button class="w-full text-left p-4 rounded-lg border-2 border-ag-accent bg-ag-surface font-semibold flex justify-between items-center" data-role="researcher">
+                                <span>&#128269; The Researcher</span>
+                                <span>&#8594;</span>
+                            </button>
+                            <button class="w-full text-left p-4 rounded-lg border border-gray-200 bg-white hover:border-ag-accent transition-colors font-semibold flex justify-between items-center" data-role="coder">
+                                <span>&#128187; The Developer</span>
+                                <span>&#8594;</span>
+                            </button>
+                            <button class="w-full text-left p-4 rounded-lg border border-gray-200 bg-white hover:border-ag-accent transition-colors font-semibold flex justify-between items-center" data-role="analyst">
+                                <span>&#128202; The Data Analyst</span>
+                                <span>&#8594;</span>
+                            </button>
+                            <button class="w-full text-left p-4 rounded-lg border border-gray-200 bg-white hover:border-ag-accent transition-colors font-semibold flex justify-between items-center" data-role="reviewer">
+                                <span>&#9997;&#65039; The Reviewer</span>
+                                <span>&#8594;</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="w-full lg:w-2/3 bg-white p-6 rounded-xl shadow-sm border border-gray-100 min-h-[400px]">
+                        <div id="role-details" class="h-full">
+                            <h3 class="text-2xl font-bold text-ag-primary mb-2" id="rd-title">&#128269; The Researcher</h3>
+                            <p class="text-ag-muted mb-6" id="rd-desc">Responsible for gathering context, searching the web, and compiling preliminary data before execution.</p>
+                            
+                            <h4 class="font-semibold text-sm uppercase tracking-wider text-ag-primary mb-3 border-b pb-2">Predefined Skillsets to Assign</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="rd-skills">
+                                <div class="bg-gray-50 p-4 rounded-lg border border-gray-100 skill-card">
+                                    <span class="font-bold block mb-1">Brave Search Tool</span>
+                                    <span class="text-xs text-ag-muted">Allows the agent to execute internet searches and read top results.</span>
+                                </div>
+                                <div class="bg-gray-50 p-4 rounded-lg border border-gray-100 skill-card">
+                                    <span class="font-bold block mb-1">Puppeteer / Playwright</span>
+                                    <span class="text-xs text-ag-muted">Headless browser control to scrape dynamic SPA websites.</span>
+                                </div>
+                                <div class="bg-gray-50 p-4 rounded-lg border border-gray-100 skill-card">
+                                    <span class="font-bold block mb-1">Fetch / Read URL</span>
+                                    <span class="text-xs text-ag-muted">Basic HTTP GET requests to extract markdown/text from static links.</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <h3 class="font-bold text-xl mb-4 text-center">Predefined Skills: Utility vs. Computational Cost</h3>
+                    <p class="text-sm text-center text-ag-muted mb-6">Evaluating the best packages to load. Higher utility skills should be assigned carefully to avoid context-window bloat.</p>
+                    <div class="chart-container">
+                        <canvas id="skillsChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <section id="mcp-tools" class="view-section">
+                <header class="mb-8">
+                    <h2 class="text-3xl font-bold text-ag-primary mb-3">Model Context Protocol (MCP) & Extensions</h2>
+                    <p class="text-lg text-ag-muted leading-relaxed">
+                        The true power of the Antigravity workflow lies in MCP. It provides a standardized way for agents to securely access local systems, databases, and third-party APIs. Here is a curated list of the best, most necessary extensions and tools you should configure for your agent environment. Use the filters to explore packages.
+                    </p>
+                </header>
+
+                <div class="mb-6 flex flex-wrap gap-2" id="mcp-filters">
+                    <button class="px-4 py-2 rounded-full text-sm font-medium bg-ag-primary text-white filter-btn" data-filter="all">All Packages</button>
+                    <button class="px-4 py-2 rounded-full text-sm font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 filter-btn" data-filter="data">Data & DB</button>
+                    <button class="px-4 py-2 rounded-full text-sm font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 filter-btn" data-filter="system">System & OS</button>
+                    <button class="px-4 py-2 rounded-full text-sm font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 filter-btn" data-filter="dev">DevOps & Git</button>
+                    <button class="px-4 py-2 rounded-full text-sm font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 filter-btn" data-filter="comms">Communications</button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="mcp-grid">
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <script>
+        const navItems = document.querySelectorAll('.nav-item');
+        const sections = document.querySelectorAll('.view-section');
+        const mobileNav = document.getElementById('mobile-nav');
+
+        function switchView(targetId) {
+            sections.forEach(sec => sec.classList.remove('active'));
+            document.getElementById(targetId).classList.add('active');
+
+            navItems.forEach(item => {
+                if(item.dataset.target === targetId) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                    item.classList.add('border-transparent');
+                }
+            });
+
+            if (mobileNav.value !== targetId) {
+                mobileNav.value = targetId;
+            }
+        }
+
+        navItems.forEach(item => {
+            item.addEventListener('click', (e) => {
+                switchView(e.target.dataset.target);
+            });
+        });
+
+        mobileNav.addEventListener('change', (e) => {
+            switchView(e.target.value);
+        });
+
+        const roleData = {
+            'researcher': {
+                title: '&#128269; The Researcher',
+                desc: 'Responsible for gathering context, searching the web, and compiling preliminary data before execution.',
+                skills: [
+                    { name: 'Brave Search Tool', desc: 'Allows the agent to execute internet searches and read top results.' },
+                    { name: 'Puppeteer / Playwright', desc: 'Headless browser control to scrape dynamic SPA websites.' },
+                    { name: 'Fetch / Read URL', desc: 'Basic HTTP GET requests to extract markdown/text from static links.' }
+                ]
+            },
+            'coder': {
+                title: '&#128187; The Developer',
+                desc: 'Writes, executes, and iterates on code. Needs direct access to file systems and terminal environments.',
+                skills: [
+                    { name: 'Local File System (MCP)', desc: 'Read, write, and traverse directories on the host machine securely.' },
+                    { name: 'Bash / Python Executor', desc: 'Run scripts in an isolated container to verify code logic.' },
+                    { name: 'Git Integration', desc: 'Stage, commit, and push code modifications.' }
+                ]
+            },
+            'analyst': {
+                title: '&#128202; The Data Analyst',
+                desc: 'Processes tabular data, runs SQL queries, and generates insights from raw numbers.',
+                skills: [
+                    { name: 'Postgres / SQLite (MCP)', desc: 'Direct, read-only or read/write access to internal databases.' },
+                    { name: 'Pandas / Dataframe Tool', desc: 'In-memory manipulation of CSV and JSON datasets.' },
+                    { name: 'Chart Generator', desc: 'Outputs structured data for UI rendering.' }
+                ]
+            },
+            'reviewer': {
+                title: '&#9997;&#65039; The Reviewer',
+                desc: 'Ensures quality control, checks for hallucinations, and validates output against initial constraints.',
+                skills: [
+                    { name: 'Linter API', desc: 'Checks code against established formatting rules.' },
+                    { name: 'Memory / Vector DB', desc: 'Recalls previous project constraints and history to ensure alignment.' }
+                ]
+            }
+        };
+
+        const agentButtons = document.querySelectorAll('#agent-selector button');
+        const rdTitle = document.getElementById('rd-title');
+        const rdDesc = document.getElementById('rd-desc');
+        const rdSkills = document.getElementById('rd-skills');
+
+        agentButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                agentButtons.forEach(b => {
+                    b.classList.remove('border-ag-accent', 'bg-ag-surface');
+                    b.classList.add('border-gray-200', 'bg-white');
+                });
+                btn.classList.remove('border-gray-200', 'bg-white');
+                btn.classList.add('border-ag-accent', 'bg-ag-surface');
+
+                const role = btn.dataset.role;
+                const data = roleData[role];
+
+                rdTitle.innerHTML = data.title;
+                rdDesc.innerText = data.desc;
+                
+                rdSkills.innerHTML = '';
+                data.skills.forEach(skill => {
+                    rdSkills.innerHTML += `
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-100 skill-card">
+                            <span class="font-bold block mb-1 text-ag-primary">${skill.name}</span>
+                            <span class="text-xs text-ag-muted">${skill.desc}</span>
+                        </div>
+                    `;
+                });
+            });
+        });
+
+        const mcpPackages = [
+            { name: '@modelcontextprotocol/server-postgres', type: 'data', desc: 'Read-only database access with schema inspection capabilities.', icon: '&#128193;' },
+            { name: '@modelcontextprotocol/server-filesystem', type: 'system', desc: 'Secure local file reading and directory traversal.', icon: '&#128194;' },
+            { name: '@modelcontextprotocol/server-github', type: 'dev', desc: 'Interact with repositories, pull requests, and issues.', icon: '&#128025;' },
+            { name: '@modelcontextprotocol/server-slack', type: 'comms', desc: 'Post messages, read channels, and interact with human operators.', icon: '&#128172;' },
+            { name: '@modelcontextprotocol/server-sqlite', type: 'data', desc: 'Lightweight local database interaction for agents.', icon: '&#128193;' },
+            { name: '@modelcontextprotocol/server-brave-search', type: 'system', desc: 'Web search and content extraction API integration.', icon: '&#128269;' },
+            { name: '@mcp-community/docker-executor', type: 'system', desc: 'Safely execute arbitrary code generated by agents in containers.', icon: '&#128230;' },
+            { name: '@mcp-community/linear', type: 'dev', desc: 'Ticket and issue management inside agentic workflows.', icon: '&#128221;' }
+        ];
+
+        const mcpGrid = document.getElementById('mcp-grid');
+        const filterBtns = document.querySelectorAll('.filter-btn');
+
+        function renderMCP(filterType) {
+            mcpGrid.innerHTML = '';
+            const filtered = filterType === 'all' ? mcpPackages : mcpPackages.filter(p => p.type === filterType);
+            
+            filtered.forEach(pkg => {
+                mcpGrid.innerHTML += `
+                    <div class="bg-white border border-gray-200 rounded-xl p-5 hover:border-ag-accent hover:shadow-md transition-all">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="w-10 h-10 rounded-full bg-ag-surface flex items-center justify-center text-xl">
+                                ${pkg.icon}
+                            </div>
+                            <h4 class="font-bold text-sm text-ag-primary break-all">${pkg.name}</h4>
+                        </div>
+                        <p class="text-sm text-ag-muted">${pkg.desc}</p>
+                        <div class="mt-4 inline-block bg-gray-100 text-xs font-semibold px-2 py-1 rounded text-gray-600 uppercase">
+                            ${pkg.type}
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        renderMCP('all');
+
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                filterBtns.forEach(b => {
+                    b.classList.remove('bg-ag-primary', 'text-white');
+                    b.classList.add('bg-gray-200', 'text-gray-700');
+                });
+                btn.classList.remove('bg-gray-200', 'text-gray-700');
+                btn.classList.add('bg-ag-primary', 'text-white');
+                renderMCP(btn.dataset.filter);
+            });
+        });
+
+        Chart.defaults.font.family = "'Outfit', sans-serif";
+        Chart.defaults.color = '#718096';
+
+        const ctxRole = document.getElementById('roleChart').getContext('2d');
+        new Chart(ctxRole, {
+            type: 'doughnut',
+            data: {
+                labels: ['The Developer (Code/Execution)', 'The Researcher (Data Gathering)', 'The Reviewer (QA/Alignment)', 'The Manager (Orchestration)'],
+                datasets: [{
+                    data: [45, 25, 20, 10],
+                    backgroundColor: [
+                        '#2D3748', 
+                        '#0D9488', 
+                        '#A0AEC0', 
+                        '#E2E8F0'  
+                    ],
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '70%',
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: { padding: 20, usePointStyle: true, pointStyle: 'circle' }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return ' ' + context.label + ': ' + context.raw + '%';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        const ctxSkills = document.getElementById('skillsChart').getContext('2d');
+        new Chart(ctxSkills, {
+            type: 'bar',
+            data: {
+                labels: ['File System R/W', 'Web Search', 'Code Execution', 'DB Queries', 'Git Ops', 'Web Scraping'],
+                datasets: [
+                    {
+                        label: 'Utility Score (0-100)',
+                        data: [95, 85, 90, 75, 60, 70],
+                        backgroundColor: '#0D9488',
+                        borderRadius: 4
+                    },
+                    {
+                        label: 'Compute Cost / Complexity',
+                        data: [20, 30, 85, 40, 50, 90],
+                        backgroundColor: '#CBD5E0',
+                        borderRadius: 4
+                    }
+                ]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        grid: { color: '#EDF2F7' }
+                    },
+                    y: {
+                        grid: { display: false }
+                    }
+                },
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+
+    </script>
+</body>
+</html>
