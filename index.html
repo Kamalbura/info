@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kamal's Pages</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Outfit', 'sans-serif'] },
+          colors: {
+            'bg':      '#FDFBF7',
+            'surface': '#F4EBE1',
+            'primary': '#2D3748',
+            'accent':  '#0D9488',
+            'text':    '#1A202C',
+            'muted':   '#718096'
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { background-color: #FDFBF7; }
+    .card {
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.12);
+    }
+    .spinner {
+      border: 3px solid #F4EBE1;
+      border-top-color: #0D9488;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body class="min-h-screen font-sans text-text">
+
+  <!-- Header -->
+  <header class="bg-primary text-white py-10 px-6 text-center shadow-lg">
+    <h1 class="text-4xl font-bold tracking-tight mb-2">Kamal's Pages</h1>
+    <p class="text-gray-300 text-lg">All website projects — click any card to open</p>
+  </header>
+
+  <!-- Main content -->
+  <main class="max-w-6xl mx-auto px-4 py-12">
+
+    <!-- Loading state -->
+    <div id="loading" class="flex flex-col items-center justify-center py-24 gap-4">
+      <div class="spinner"></div>
+      <p class="text-muted text-sm">Fetching pages…</p>
+    </div>
+
+    <!-- Error state -->
+    <div id="error" class="hidden text-center py-24">
+      <p class="text-red-500 text-lg font-medium" id="error-msg"></p>
+      <p class="text-muted text-sm mt-2">Check your connection or try refreshing the page.</p>
+    </div>
+
+    <!-- Empty state -->
+    <div id="empty" class="hidden text-center py-24">
+      <p class="text-muted text-xl">No HTML pages found in this repository yet.</p>
+    </div>
+
+    <!-- Cards grid -->
+    <div id="grid" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="text-center text-muted text-sm py-8">
+    Hosted on <a href="https://pages.github.com" class="text-accent hover:underline" target="_blank" rel="noopener noreferrer">GitHub Pages</a>
+    &nbsp;·&nbsp;
+    <a id="source-link" href="https://github.com/Kamalbura/info" class="text-accent hover:underline" target="_blank" rel="noopener noreferrer">View source</a>
+  </footer>
+
+  <script>
+    (async function () {
+      // Derive owner and repo from the GitHub Pages URL automatically so this
+      // file works without modification in any fork or renamed repo.
+      // GitHub Pages pattern: https://{owner}.github.io/{repo}/
+      const hostname = window.location.hostname;
+      const isGitHubPages = hostname.endsWith('.github.io');
+      let OWNER, REPO, PAGES_BASE;
+
+      if (isGitHubPages) {
+        OWNER = hostname.split('.')[0];
+        const pathParts = window.location.pathname.split('/').filter(Boolean);
+        // Root pages repo (owner.github.io) has no sub-path; otherwise first segment is repo
+        REPO  = pathParts.length > 0 ? pathParts[0] : `${OWNER}.github.io`;
+        PAGES_BASE = `${window.location.origin}/${REPO}/`;
+      } else {
+        // Local development fallback
+        OWNER = 'Kamalbura';
+        REPO  = 'info';
+        PAGES_BASE = `https://${OWNER.toLowerCase()}.github.io/${REPO}/`;
+      }
+
+      // Update footer source link dynamically
+      document.getElementById('source-link').href = `https://github.com/${OWNER}/${REPO}`;
+
+      const loadingEl = document.getElementById('loading');
+      const errorEl   = document.getElementById('error');
+      const errorMsg  = document.getElementById('error-msg');
+      const emptyEl   = document.getElementById('empty');
+      const gridEl    = document.getElementById('grid');
+
+      function showOnly(el) {
+        [loadingEl, errorEl, emptyEl, gridEl].forEach(e => e.classList.add('hidden'));
+        el.classList.remove('hidden');
+      }
+
+      // Emoji icons to cycle through for visual variety
+      const ICONS = ['🌐','🚀','✨','🎯','💡','📊','🛠️','🎨','📡','🔬','⚡','🌟'];
+
+      function buildCard(file, index) {
+        const name    = file.name;                       // e.g. "antigravity.html"
+        const title   = name
+          .replace(/\.html$/i, '')                       // strip extension
+          .replace(/[-_]/g, ' ')                         // dashes/underscores → spaces
+          .replace(/\b\w/g, c => c.toUpperCase());       // Title Case
+        const url     = PAGES_BASE + name;
+        const icon    = ICONS[index % ICONS.length];
+        const size    = file.size ? `${Math.round(file.size / 1024)} KB` : '';
+
+        const card = document.createElement('a');
+        card.href   = url;
+        card.target = '_blank';
+        card.rel    = 'noopener noreferrer';
+        card.className = 'card block bg-white rounded-2xl border border-gray-200 p-6 no-underline';
+
+        const iconSpan = document.createElement('span');
+        iconSpan.className = 'text-4xl select-none';
+        iconSpan.setAttribute('aria-hidden', 'true');
+        iconSpan.textContent = icon;
+
+        const titleEl = document.createElement('h2');
+        titleEl.className = 'text-lg font-semibold text-primary truncate';
+        titleEl.textContent = title;
+
+        const nameEl = document.createElement('p');
+        nameEl.className = 'text-sm text-muted mt-1 truncate';
+        nameEl.textContent = name;
+
+        const textDiv = document.createElement('div');
+        textDiv.className = 'flex-1 min-w-0';
+        textDiv.appendChild(titleEl);
+        textDiv.appendChild(nameEl);
+        if (size) {
+          const sizeEl = document.createElement('p');
+          sizeEl.className = 'text-xs text-gray-400 mt-2';
+          sizeEl.textContent = size;
+          textDiv.appendChild(sizeEl);
+        }
+
+        const arrow = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        arrow.setAttribute('class', 'w-5 h-5 text-accent flex-shrink-0 mt-1');
+        arrow.setAttribute('fill', 'none');
+        arrow.setAttribute('stroke', 'currentColor');
+        arrow.setAttribute('stroke-width', '2');
+        arrow.setAttribute('viewBox', '0 0 24 24');
+        arrow.setAttribute('aria-hidden', 'true');
+        const pathEl = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        pathEl.setAttribute('stroke-linecap', 'round');
+        pathEl.setAttribute('stroke-linejoin', 'round');
+        pathEl.setAttribute('d', 'M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14');
+        arrow.appendChild(pathEl);
+
+        const flex = document.createElement('div');
+        flex.className = 'flex items-start gap-4';
+        flex.appendChild(iconSpan);
+        flex.appendChild(textDiv);
+        flex.appendChild(arrow);
+        card.appendChild(flex);
+        return card;
+      }
+
+      try {
+        const apiUrl  = `https://api.github.com/repos/${OWNER}/${REPO}/contents/`;
+        const headers = { 'Accept': 'application/vnd.github.v3+json' };
+        const res     = await fetch(apiUrl, { headers });
+
+        if (!res.ok) {
+          if (res.status === 403 && res.headers.get('X-RateLimit-Remaining') === '0') {
+            const reset = res.headers.get('X-RateLimit-Reset');
+            const resetTime = reset ? new Date(reset * 1000).toLocaleTimeString() : 'soon';
+            throw new Error(`GitHub API rate limit reached. Resets at ${resetTime}.`);
+          }
+          throw new Error(`GitHub API responded with ${res.status} ${res.statusText}`);
+        }
+
+        const files = await res.json();
+
+        // Filter .html files, skip index.html itself
+        const pages = files.filter(f =>
+          f.type === 'file' &&
+          /\.html$/i.test(f.name) &&
+          f.name.toLowerCase() !== 'index.html'
+        );
+
+        if (pages.length === 0) {
+          showOnly(emptyEl);
+          return;
+        }
+
+        pages.forEach((file, i) => {
+          gridEl.appendChild(buildCard(file, i));
+        });
+
+        showOnly(gridEl);
+      } catch (err) {
+        console.error(err);
+        errorMsg.textContent = err.message || 'Failed to load pages from GitHub API.';
+        showOnly(errorEl);
+      }
+    })();
+  </script>
+</body>
+</html>
